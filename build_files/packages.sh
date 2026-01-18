@@ -7,15 +7,11 @@ dnf5 config-manager setopt terra.enabled=1
 
 PACKAGES="alacritty \
           bat \
+          clang \
           neovim \
           gparted \
-          docker \
-          docker-cli \
-          containerd \
-          docker-buildx \
-          docker-compose \
-          docker-compose-switch \
-          thefuck podman-compose \
+          thefuck \
+          podman-compose \
           godot \
           zsh \
           zed \
@@ -41,5 +37,11 @@ PACKAGES="alacritty \
           clamav \
           clamtk \
           btop"
+          # docker \
+          # docker-cli \
+          # containerd \
+          # docker-buildx \
+          # docker-compose \
+          # docker-compose-switch \
 
 dnf5 install -y $PACKAGES --skip-unavailable
