@@ -7,6 +7,7 @@ dnf5 config-manager setopt terra.enabled=1
 
 PACKAGES="alacritty \
           bat \
+	  clang \
           neovim \
           gparted \
           docker \
