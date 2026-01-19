@@ -4,6 +4,9 @@ set -ouex pipefail
 
 ### Install packages
 dnf5 config-manager setopt terra.enabled=1
+dnf5 config-manager setopt rpmfusion-nonfree.enabled=1
+
+dnf5 remove -y libva-intel-media-driver
 
 PACKAGES="alacritty \
           bat \
@@ -36,7 +39,8 @@ PACKAGES="alacritty \
           persepolis \
           clamav \
           clamtk \
-          btop"
+          btop \
+          intel-media-driver"
           # docker \
           # docker-cli \
           # containerd \
