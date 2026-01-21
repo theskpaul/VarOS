@@ -43,6 +43,7 @@ PACKAGES="alacritty \
           btop \
           intel-gpu-tools \
           intel-media-driver \
+          filelight \
           terminus-fonts-console"
           # docker \
           # docker-cli \
