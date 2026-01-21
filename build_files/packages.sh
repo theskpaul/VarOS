@@ -41,8 +41,9 @@ PACKAGES="alacritty \
           clamav \
           clamtk \
           btop \
-	  intel-gpu-tools \
-          intel-media-driver"
+          intel-gpu-tools \
+          intel-media-driver \
+          terminus-fonts-console"
           # docker \
           # docker-cli \
           # containerd \
