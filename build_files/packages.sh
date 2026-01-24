@@ -55,5 +55,5 @@ PACKAGES="alacritty \
 dnf5 install -y $PACKAGES --skip-unavailable
 
 dnf5 config-manager setopt terra.enabled=0
-dnf5 config-manager setopt rpmfusion-free.enabled=1
+dnf5 config-manager setopt rpmfusion-free.enabled=0
 dnf5 config-manager setopt rpmfusion-nonfree.enabled=0
