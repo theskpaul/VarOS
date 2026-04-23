@@ -14,7 +14,8 @@ PACKAGES="toolbox \
          intel-media-driver \
          gparted \
          gh \
-         btop"
+         btop \
+         alacritty"
 
 dnf5 install -y $PACKAGES --skip-unavailable
 
