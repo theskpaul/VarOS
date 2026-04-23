@@ -15,7 +15,8 @@ PACKAGES="toolbox \
          gparted \
          gh \
          btop \
-         alacritty"
+         alacritty \
+         neovim"
 
 dnf5 install -y $PACKAGES --skip-unavailable
 
