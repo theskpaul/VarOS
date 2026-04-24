@@ -6,7 +6,7 @@ set -ouex pipefail
 wget https://downloads.zohocdn.com/arattai-desktop/linux/arattai-1.0.8_x86_64.rpm -O /tmp/arattai.rpm
 
 ### Workaround for buggy arattai RPM (self-conflicting cpio directory entry)
-mkdir -p /opt/Arattai
+rpm --relocate /opt=/var/opt -i /tmp/arattai.rpm
 
 ### Install packages
 dnf5 config-manager setopt rpmfusion-nonfree.enabled=1
