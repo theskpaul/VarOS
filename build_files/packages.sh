@@ -17,7 +17,9 @@ PACKAGES="toolbox \
          btop \
          alacritty \
          neovim \
-         falkon"
+         falkon \
+         irqbalance \
+         uresourced"
 
 dnf5 install -y $PACKAGES --skip-unavailable
 
