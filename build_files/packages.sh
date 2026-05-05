@@ -17,8 +17,7 @@ PACKAGES="toolbox \
          btop \
          alacritty \
          neovim \
-         falkon \
-         glab"
+         falkon"
 
 dnf5 install -y $PACKAGES --skip-unavailable
 
