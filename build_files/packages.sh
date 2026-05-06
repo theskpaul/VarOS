@@ -20,7 +20,8 @@ PACKAGES="toolbox \
          falkon \
          irqbalance \
          uresourced \
-         zed"
+         zed \
+         zsh"
          # intel-media-driver
 
 dnf5 install -y $PACKAGES --skip-unavailable
