@@ -3,16 +3,15 @@
 set -ouex pipefail
 
 ### Install packages
-dnf5 config-manager setopt rpmfusion-nonfree.enabled=1
+# dnf5 config-manager setopt rpmfusion-nonfree.enabled=1
 dnf5 config-manager setopt terra.enabled=1
 
-dnf5 remove -y libva-intel-media-driver
+# dnf5 remove -y libva-intel-media-driver
 
 PACKAGES="toolbox \
          clamav \
          clamtk \
          igt-gpu-tools \
-         intel-media-driver \
          gparted \
          gh \
          btop \
@@ -22,8 +21,9 @@ PACKAGES="toolbox \
          irqbalance \
          uresourced \
          zed"
+         # intel-media-driver
 
 dnf5 install -y $PACKAGES --skip-unavailable
 
-dnf5 config-manager setopt rpmfusion-nonfree.enabled=0
+# dnf5 config-manager setopt rpmfusion-nonfree.enabled=0
 dnf5 config-manager setopt terra.enabled=0
