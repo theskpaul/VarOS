@@ -129,6 +129,7 @@ jobs:
           # rpm-ostree upgrade only downloads what actually changed
           sudo podman run --rm --privileged \
             --volume /var/lib/containers:/var/lib/containers \
+            --volume /var/tmp:/var/tmp \
             localhost/raw-img \
             rpm-ostree compose build-chunked-oci \
               --bootc \
