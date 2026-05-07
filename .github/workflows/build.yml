@@ -95,16 +95,21 @@ jobs:
       # which is required for the rechunk step that uses sudo podman.
       - name: Build Image
         id: build_image
+        env:
+          LABELS: ${{ steps.metadata.outputs.labels }}
         run: |
-          # Convert newline-separated labels into --label flags
-          LABEL_ARGS=""
+          # Write labels to a temp file to avoid shell quoting/expansion issues.
+          # Each line becomes a separate --label argument via a bash array.
+          echo "$LABELS" > /tmp/image-labels.txt
+
+          LABEL_ARGS=()
           while IFS= read -r label; do
             [ -z "$label" ] && continue
-            LABEL_ARGS+="--label=$(printf '%q' "$label") "
-          done <<< "${{ steps.metadata.outputs.labels }}"
+            LABEL_ARGS+=(--label "$label")
+          done < /tmp/image-labels.txt
 
           sudo buildah build \
-            $LABEL_ARGS \
+            "${LABEL_ARGS[@]}" \
             --tag raw-img \
             .
 
