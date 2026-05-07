@@ -48,6 +48,11 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/sys-config.sh
 
+
+RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
+    --mount=type=tmpfs,dst=/tmp \
+    /ctx/999-cleanup.sh
+
 ### LINTING
 ## Verify final image and contents are correct.
 RUN bootc container lint
