@@ -55,7 +55,7 @@ jobs:
       - name: Restore buildah cache
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
-          path: /var/tmp/buildah-cache-*
+          path: /var/lib/containers/storage
           key: buildah-varos-${{ env.CENTOS_VERSION }}-${{ github.run_id }}
           restore-keys: |
             buildah-varos-${{ env.CENTOS_VERSION }}-
@@ -94,23 +94,7 @@ jobs:
           sep-tags: " "
           sep-labels: "\n"
 
-      # Ubuntu 24.04 apt only ships buildah 1.33 which lacks --cache-dir (added in 1.35).
-      # Install from the kubic stable repo to get a current version.
-      - name: Upgrade buildah
-        run: |
-          . /etc/os-release
-          sudo curl -fsSL \
-            "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${VERSION_ID}/Release.key" \
-            -o /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_stable.asc
-          echo "deb https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${VERSION_ID}/ /" \
-            | sudo tee /etc/apt/sources.list.d/devel_kubic_libcontainers_stable.list
-          sudo apt-get update -qq
-          sudo apt-get install -y buildah
-          buildah version
-
       # sudo -E preserves the runner's environment inside the sudo context.
-      # --cache-dir persists intermediate layers to /var/tmp so the
-      # actions/cache steps above and below can store and restore them.
       - name: Build Image
         id: build_image
         env:
@@ -127,7 +111,6 @@ jobs:
           done < /tmp/image-labels.txt
 
           sudo -E buildah build \
-            --cache-dir /var/tmp/buildah-cache-varos \
             "${LABEL_ARGS[@]}" \
             --tag raw-img \
             .
@@ -201,7 +184,7 @@ jobs:
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae
         if: github.event_name != 'pull_request'
         with:
-          path: /var/tmp/buildah-cache-*
+          path: /var/lib/containers/storage
           key: buildah-varos-${{ env.CENTOS_VERSION }}-${{ github.run_id }}
 
       - name: Install Cosign
