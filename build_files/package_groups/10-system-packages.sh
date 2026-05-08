@@ -6,6 +6,9 @@ dnf5 install -y \
          nix \
          nix-daemon
 
+dnf5 remove -y \
+        plasma-login-manager
+
 dnf5 --setopt=install_weak_deps=False install -y \
          clamav \
          clamtk \
@@ -16,7 +19,8 @@ dnf5 --setopt=install_weak_deps=False install -y \
          nicstat \
          numactl \
          usbmuxd \
-         waypipe
+         waypipe \
+         sddm
 
 # dnf5 remove -y libva-intel-media-driver
 # intel-media-driver
