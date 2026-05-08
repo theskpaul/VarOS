@@ -146,7 +146,7 @@ just lint
 ### Rebase from an existing ublue image
 
 ```bash
-bootc switch --transport registry ghcr.io/theskpaul/varos:latest
+bootc switch --transport registry ghcr.io/USERNAME/varos:latest
 ```
 
 ### Verify the signature
@@ -154,7 +154,7 @@ bootc switch --transport registry ghcr.io/theskpaul/varos:latest
 ```bash
 cosign verify \
   --key cosign.pub \
-  ghcr.io/theskpaul/varos:latest
+  ghcr.io/USERNAME/varos:latest
 ```
 
 ---
