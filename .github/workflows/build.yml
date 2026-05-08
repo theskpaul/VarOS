@@ -63,13 +63,24 @@ jobs:
       - name: Setup container storage
         uses: ublue-os/container-storage-action@main
 
+      - name: Check if base image changed
+        id: check
+        if: github.event_name == 'schedule'
+        run: |
+          DIGEST=$(skopeo inspect --format '{{.Digest}}' docker://ghcr.io/ublue-os/bazzite:stable)
+          CACHED=$(cat .base-digest 2>/dev/null || echo "none")
+          echo "changed=$([ "$DIGEST" != "$CACHED" ] && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "$DIGEST" > .base-digest
+
       - name: Get current date
         id: date
+        if: github.event_name != 'schedule' || steps.check.outputs.changed == 'true'
         run: |
           echo "date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
 
       - name: Image Metadata
         id: metadata
+        if: github.event_name != 'schedule' || steps.check.outputs.changed == 'true'
         uses: docker/metadata-action@v5
         with:
           tags: |
@@ -87,6 +98,7 @@ jobs:
 
       - name: Build Image
         id: build_image
+        if: github.event_name != 'schedule' || steps.check.outputs.changed == 'true'
         env:
           LABELS: ${{ steps.metadata.outputs.labels }}
         run: |
@@ -99,14 +111,19 @@ jobs:
             LABEL_ARGS+=(--label "$label")
           done < /tmp/image-labels.txt
 
+          # Use if-not-present on PRs to skip re-pulling the base image
+          PULL_POLICY=${{ github.event_name == 'pull_request' && 'if-not-present' || 'newer' }}
+
           sudo -E buildah build \
             "${LABEL_ARGS[@]}" \
+            --pull=${PULL_POLICY} \
             --layers \
             --tag raw-img \
             .
 
       - name: Rechunk image
         id: rechunk
+        if: github.event_name != 'pull_request' && (github.event_name != 'schedule' || steps.check.outputs.changed == 'true')
         run: |
           container=$(sudo buildah from raw-img)
           mnt=$(sudo buildah mount $container)
@@ -151,7 +168,7 @@ jobs:
 
       - name: Push image
         id: push
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && (github.event_name != 'schedule' || steps.check.outputs.changed == 'true')
         env:
           IMAGE_REF: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
           RECHUNK_REF: ${{ steps.rechunk.outputs.ref }}
@@ -167,13 +184,13 @@ jobs:
           echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
 
       - name: Install Cosign
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && (github.event_name != 'schedule' || steps.check.outputs.changed == 'true')
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad
         with:
           cosign-release: 'v2.6.1'
 
       - name: Sign image
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && (github.event_name != 'schedule' || steps.check.outputs.changed == 'true')
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
         run: |
