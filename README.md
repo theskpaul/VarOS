@@ -11,7 +11,7 @@
 
 **A hardened, opinionated Bazzite image built for people who know what they want.**
 
-[![Build Status](https://github.com/USERNAME/VarOS/actions/workflows/build.yml/badge.svg)](https://github.com/USERNAME/VarOS/actions/workflows/build.yml)
+[![Build Status](https://github.com/theskpaul/VarOS/actions/workflows/build.yml/badge.svg)](https://github.com/theskpaul/VarOS/actions/workflows/build.yml)
 [![Fedora 44](https://img.shields.io/badge/Fedora-44-blue?logo=fedora&logoColor=white)](https://fedoraproject.org/)
 [![Based on Bazzite](https://img.shields.io/badge/Based%20on-Bazzite-purple?logo=linux&logoColor=white)](https://bazzite.gg/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green)](LICENSE)
@@ -146,7 +146,7 @@ just lint
 ### Rebase from an existing ublue image
 
 ```bash
-bootc switch --transport registry ghcr.io/USERNAME/varos:latest
+bootc switch --transport registry ghcr.io/theskpaul/varos:latest
 ```
 
 ### Verify the signature
@@ -154,7 +154,7 @@ bootc switch --transport registry ghcr.io/USERNAME/varos:latest
 ```bash
 cosign verify \
   --key cosign.pub \
-  ghcr.io/USERNAME/varos:latest
+  ghcr.io/theskpaul/varos:latest
 ```
 
 ---
