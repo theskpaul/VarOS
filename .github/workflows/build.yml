@@ -6,22 +6,22 @@ on:
     branches:
       - main
   schedule:
-    - cron: '05 10 * * *' # 10:05am UTC everyday
+    - cron: "05 10 * * *" # 10:05am UTC everyday
   push:
     branches:
       - main
     paths-ignore:
-      - '**/README.md'
+      - "**/README.md"
   workflow_dispatch:
 
 env:
-  IMAGE_DESC: 'My Customized Bazzite Image called VarOS'
-  IMAGE_KEYWORDS: 'bootc,ublue,universal-blue'
-  IMAGE_LOGO_URL: 'https://avatars.githubusercontent.com/u/120078124?s=200&v=4'
-  IMAGE_NAME: '${{ github.event.repository.name }}'
-  IMAGE_REGISTRY: 'ghcr.io/${{ github.repository_owner }}'
-  DEFAULT_TAG: 'latest'
-  CENTOS_VERSION: '44'
+  IMAGE_DESC: "My Customized Bazzite Image called VarOS"
+  IMAGE_KEYWORDS: "bootc,ublue,universal-blue"
+  IMAGE_LOGO_URL: "https://avatars.githubusercontent.com/u/120078124?s=200&v=4"
+  IMAGE_NAME: "${{ github.event.repository.name }}"
+  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
+  DEFAULT_TAG: "latest"
+  CENTOS_VERSION: "44"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -49,13 +49,16 @@ jobs:
       - name: Maximize build space
         uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6
 
-      - name: Mount BTRFS for podman storage
-        id: container-storage-action
-        uses: ublue-os/container-storage-action@911baca08baf30c8654933e9e9723cb399892140
-        continue-on-error: true
+      # Restore buildah layer cache from previous runs.
+      # On cache hit, buildah skips re-downloading unchanged layers —
+      # this is the main thing that keeps incremental builds fast.
+      - name: Restore buildah cache
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
-          target-dir: /var/lib/containers
-          mount-opts: compress-force=zstd:2
+          path: /var/tmp/buildah-cache-*
+          key: buildah-varos-${{ env.CENTOS_VERSION }}-${{ github.run_id }}
+          restore-keys: |
+            buildah-varos-${{ env.CENTOS_VERSION }}-
 
       - name: Get current date
         id: date
@@ -88,11 +91,12 @@ jobs:
             io.artifacthub.package.logo-url=${{ env.IMAGE_LOGO_URL }}
             io.artifacthub.package.prerelease=false
             containers.bootc=1
-          sep-tags: ' '
+          sep-tags: " "
           sep-labels: "\n"
 
-      # Build using sudo buildah so the image lands in root's podman storage,
-      # which is required for the rechunk step that uses sudo podman.
+      # sudo -E preserves the runner's environment inside the sudo context.
+      # --cache-to/from persists intermediate layers to /var/tmp so the
+      # actions/cache steps above and below can store and restore them.
       - name: Build Image
         id: build_image
         env:
@@ -108,7 +112,9 @@ jobs:
             LABEL_ARGS+=(--label "$label")
           done < /tmp/image-labels.txt
 
-          sudo buildah build \
+          sudo -E buildah build \
+            --cache-to /var/tmp/buildah-cache-varos \
+            --cache-from /var/tmp/buildah-cache-varos \
             "${LABEL_ARGS[@]}" \
             --tag raw-img \
             .
@@ -159,24 +165,37 @@ jobs:
           IMAGE_REF: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
           RECHUNK_REF: ${{ steps.rechunk.outputs.ref }}
         run: |
-          # Push to the primary tag first and capture digest
-          PRIMARY_TAG="${IMAGE_REF}:${{ env.DEFAULT_TAG }}"
-          sudo skopeo copy ${RECHUNK_REF} docker://${PRIMARY_TAG}
-          DIGEST=$(sudo skopeo inspect --format '{{.Digest}}' docker://${PRIMARY_TAG})
-          echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
-
-          # Copy remaining tags without re-uploading layers
+          # Build --additional-tag args for all tags beyond the primary
+          EXTRA_TAGS=()
           for tag in ${{ steps.metadata.outputs.tags }}; do
             [ "$tag" = "${{ env.DEFAULT_TAG }}" ] && continue
-            sudo skopeo copy docker://${PRIMARY_TAG} \
-              docker://${IMAGE_REF}:${tag}
+            EXTRA_TAGS+=(--additional-tag "${IMAGE_REF}:${tag}")
           done
+
+          # Push all tags in one shot — no redundant layer uploads
+          sudo skopeo copy \
+            "${EXTRA_TAGS[@]}" \
+            ${RECHUNK_REF} \
+            docker://${IMAGE_REF}:${{ env.DEFAULT_TAG }}
+
+          DIGEST=$(sudo skopeo inspect --format '{{.Digest}}' \
+            docker://${IMAGE_REF}:${{ env.DEFAULT_TAG }})
+          echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
+
+      # Save the buildah layer cache for the next run.
+      # Only runs on non-PR builds so cache isn't polluted by test builds.
+      - name: Save buildah cache
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        if: github.event_name != 'pull_request'
+        with:
+          path: /var/tmp/buildah-cache-*
+          key: buildah-varos-${{ env.CENTOS_VERSION }}-${{ github.run_id }}
 
       - name: Install Cosign
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
         with:
-          cosign-release: 'v2.6.1'
+          cosign-release: "v2.6.1"
 
       - name: Sign container image
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
