@@ -10,4 +10,3 @@ Options=bind,defaults,noatime
 
 [Install]
 WantedBy=local-fs.target
-Before=nix-daemon.service
