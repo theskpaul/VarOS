@@ -1,0 +1,13 @@
+[Unit]
+Description=Mount /var/nix on /nix
+
+[Mount]
+What=/var/nix
+Where=/nix
+
+Type=none
+Options=bind,defaults,noatime
+
+[Install]
+WantedBy=local-fs.target
+Before=nix-daemon.service

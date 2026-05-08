@@ -2,6 +2,9 @@
 
 set -ouex pipefail
 
+# Enable Nix mount
+systemctl enable nix.mount
+
 # Daemons
 systemctl enable podman.socket
 systemctl enable docker.socket
