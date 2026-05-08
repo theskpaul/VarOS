@@ -58,11 +58,8 @@ jobs:
       #
       # Proper Buildah storage caching
       #
-      - name: Restore container storage
+      - name: Setup container storage
         uses: ublue-os/container-storage-action@main
-        with:
-          storage-path: /var/lib/containers/storage
-          save-cache: false
 
       - name: Get current date
         id: date
@@ -166,13 +163,6 @@ jobs:
             docker://${IMAGE_REF}:${{ env.DEFAULT_TAG }})
 
           echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
-
-      - name: Save container storage
-        if: github.event_name != 'pull_request'
-        uses: ublue-os/container-storage-action@main
-        with:
-          storage-path: /var/lib/containers/storage
-          save-cache: true
 
       - name: Install Cosign
         if: github.event_name != 'pull_request'
