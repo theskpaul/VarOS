@@ -2,9 +2,6 @@
 
 set -ouex pipefail
 
-mkdir -vp /var/nix
-mount -vo defaults,noatime --bind /var/nix /nix
-
 dnf5 install -y \
          nix \
          nix-daemon
