@@ -94,10 +94,14 @@ jobs:
           sep-tags: " "
           sep-labels: "\n"
 
-      # The Ubuntu 24.04 runner ships an old buildah that lacks --cache-dir.
-      # Install the latest version from apt to get it.
+      # Ubuntu 24.04 apt only ships buildah 1.33 which lacks --cache-dir (added in 1.35).
+      # Install from the upstream kubic OBS repo to get a current version.
       - name: Upgrade buildah
         run: |
+          sudo apt-get install -y curl
+          . /etc/os-release
+          curl -fsSL "https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_${VERSION_ID}/Release.key"             | gpg --dearmor             | sudo tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_unstable.gpg > /dev/null
+          echo "deb https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_${VERSION_ID}/ /"             | sudo tee /etc/apt/sources.list.d/devel_kubic_libcontainers_unstable.list
           sudo apt-get update -qq
           sudo apt-get install -y buildah
           buildah version
