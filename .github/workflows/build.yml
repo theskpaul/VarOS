@@ -94,8 +94,16 @@ jobs:
           sep-tags: " "
           sep-labels: "\n"
 
+      # The Ubuntu 24.04 runner ships an old buildah that lacks --cache-dir.
+      # Install the latest version from apt to get it.
+      - name: Upgrade buildah
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y buildah
+          buildah version
+
       # sudo -E preserves the runner's environment inside the sudo context.
-      # --cache-to/from persists intermediate layers to /var/tmp so the
+      # --cache-dir persists intermediate layers to /var/tmp so the
       # actions/cache steps above and below can store and restore them.
       - name: Build Image
         id: build_image
