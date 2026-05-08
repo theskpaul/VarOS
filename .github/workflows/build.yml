@@ -113,8 +113,7 @@ jobs:
           done < /tmp/image-labels.txt
 
           sudo -E buildah build \
-            --cache-to /var/tmp/buildah-cache-varos \
-            --cache-from /var/tmp/buildah-cache-varos \
+            --cache-dir /var/tmp/buildah-cache-varos \
             "${LABEL_ARGS[@]}" \
             --tag raw-img \
             .
