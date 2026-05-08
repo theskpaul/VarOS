@@ -162,3 +162,16 @@ cosign verify \
 ## License
 
 [Apache 2.0](LICENSE)
+
+---
+
+## Acknowledgements
+
+VarOS was originally bootstrapped from the Universal Blue / Bazzite ecosystem and later heavily modified for personal workstation use.
+
+This project builds on the excellent work done by:
+- [Universal Blue](https://universal-blue.org/)
+- [Bazzite](https://bazzite.gg/)
+- [Fedora Atomic](https://fedoraproject.org/atomic-desktops/)
+
+AI tools were also used during parts of development and documentation.
