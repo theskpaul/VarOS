@@ -1,0 +1,13 @@
+[Unit]
+Description=Mount /usr/share/sddm -> /var/sddm
+Before=display-manager.service sddm.service
+
+[Mount]
+Where=/usr/share/sddm
+What=/var/sddm
+
+Type=none
+Options=bind,defaults,noatime
+
+[Install]
+WantedBy=local-fs.target

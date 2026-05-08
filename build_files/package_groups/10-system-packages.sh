@@ -20,7 +20,9 @@ dnf5 --setopt=install_weak_deps=False install -y \
          numactl \
          usbmuxd \
          waypipe \
-         sddm
+         sddm \
+         sddm-kcm \
+         sddm-breeze
 
 # dnf5 remove -y libva-intel-media-driver
 # intel-media-driver
