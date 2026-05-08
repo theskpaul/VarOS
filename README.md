@@ -167,11 +167,10 @@ cosign verify \
 
 ## Acknowledgements
 
-VarOS was originally bootstrapped from the Universal Blue / Bazzite ecosystem and later heavily modified for personal workstation use.
+VarOS was originally bootstrapped from the [uBlue image-template](https://github.com/ublue-os/image-template) and builds upon the broader Universal Blue ecosystem. VarOS has since diverged substantially and is maintained as a personal workstation-focused image.
 
-This project builds on the excellent work done by:
-- [Universal Blue](https://universal-blue.org/)
+Parts of the configuration and workflow were also inspired by or adapted from:
 - [Bazzite](https://bazzite.gg/)
-- [Fedora Atomic](https://fedoraproject.org/atomic-desktops/)
+- [Bazzite DX](https://github.com/ublue-os/bazzite-dx)
 
-AI tools were also used during parts of development and documentation.
+AI tools were used during parts of development and documentation.
