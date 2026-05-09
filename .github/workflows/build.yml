@@ -139,9 +139,8 @@ jobs:
           container=$(sudo buildah from raw-img)
           mnt=$(sudo buildah mount $container)
 
-          sudo rm -rf \
-            $mnt/run/* \
-            $mnt/tmp/* || true
+          sudo find "$mnt/run" -mindepth 1 -delete || true
+          sudo find "$mnt/tmp" -mindepth 1 -delete || true
 
           sudo buildah umount $container
 
@@ -157,20 +156,33 @@ jobs:
 
       - name: Run Rechunker
         id: rechunk
+        if: github.event_name != 'schedule' || steps.check.outputs.changed == 'true'
         run: |
-          sudo podman run \
-            --rm \
-            --privileged \
-            -v /var/lib/containers:/var/lib/containers \
+          container=$(sudo buildah from raw-img)
+          mnt=$(sudo buildah mount $container)
+
+          sudo bash -c "rm -rf $mnt/run/* $mnt/tmp/*"
+
+          sudo buildah umount $container
+          sudo buildah commit --identity-label=false --rm $container raw-img
+
+          sudo mkdir -p /tmp/rechunker
+          sudo chmod 777 /tmp/rechunker
+
+          sudo podman run --rm --privileged \
+            --tmpfs /tmp:size=8G \
+            --env TMPDIR=/tmp/rechunker \
+            --volume /var/lib/containers:/var/lib/containers \
             localhost/raw-img \
             rpm-ostree compose build-chunked-oci \
               --bootc \
-              --max-layers 64 \
+              --max-layers 127 \
               --format-version 2 \
               --from localhost/raw-img \
               --output containers-storage:localhost/chunked-img
 
-          echo "ref=containers-storage:localhost/chunked-img" >> $GITHUB_OUTPUT
+          sudo podman untag raw-img
+          echo "ref=containers-storage:localhost/chunked-img" >> "$GITHUB_OUTPUT"
 
       ##########################################################
       # Push latest
