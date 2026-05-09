@@ -6,6 +6,7 @@ FROM ghcr.io/ublue-os/bazzite:stable
 # Copy ONLY files that package install scripts depend on at build time.
 # Changing other files in system_files/ won't invalidate package layers.
 COPY system_files/etc/yum.repos.d/ /etc/yum.repos.d/
+COPY system_files/etc/systemd/system/ /etc/systemd/system/
 
 # Layer 1: Stable system/hardware packages
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
