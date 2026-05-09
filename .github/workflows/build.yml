@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # fix: added; suppresses Node 16 deprecation warnings
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
   IMAGE_DESC: "My Customized Bazzite Image called VarOS"
   IMAGE_KEYWORDS: "bootc,ublue,universal-blue"
@@ -23,7 +23,7 @@ env:
   IMAGE_NAME: "${{ github.event.repository.name }}"
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
-  FEDORA_VERSION: "44"  # fix: was CENTOS_VERSION — this is a Fedora/Bazzite image, not CentOS
+  FEDORA_VERSION: "44"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -46,25 +46,18 @@ jobs:
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
 
       - name: Checkout
-        uses: actions/checkout@v4  # fix: was labelled # v6 which does not exist
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Maximize build space
         uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6 # v9
 
-      # fix: cache the .base-digest file so it persists between scheduled runs.
-      # Without this, CACHED is always "none" and the skip-if-unchanged logic
-      # never fires — every scheduled run rebuilds unconditionally.
       - name: Restore base-digest cache
         if: github.event_name == 'schedule'
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: .base-digest
           key: base-digest-${{ env.FEDORA_VERSION }}
 
-      # On scheduled runs, skip the entire pipeline if bazzite:stable hasn't
-      # changed since the last build. This prevents pushing a new image with
-      # different chunk hashes (causing unnecessary re-downloads) when nothing
-      # actually changed.
       - name: Check if base image changed
         id: check
         if: github.event_name == 'schedule'
@@ -76,19 +69,16 @@ jobs:
             >> $GITHUB_OUTPUT
           echo "$DIGEST" > .base-digest
 
-      # Persist the updated digest so the next scheduled run can compare against it.
       - name: Save base-digest cache
         if: github.event_name == 'schedule' && steps.check.outputs.changed == 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: .base-digest
           key: base-digest-${{ env.FEDORA_VERSION }}
 
-      # Restore buildah layer cache from previous runs.
-      # On cache hit, buildah skips re-downloading unchanged layers.
       - name: Restore buildah cache
         if: github.event_name != 'schedule' || steps.check.outputs.changed == 'true'
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: /var/lib/containers/storage
           key: buildah-varos-${{ env.FEDORA_VERSION }}-${{ github.run_id }}
@@ -204,9 +194,17 @@ jobs:
             docker://${IMAGE_REF}:${{ env.DEFAULT_TAG }})
           echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
 
+      # fix: all sudo buildah/podman operations above write files as root into
+      # /var/lib/containers/storage. actions/cache/save runs as the unprivileged
+      # runner user and gets EACCES when it tries to lstat those root-owned files.
+      # Chown the directory back to the runner before the cache step runs.
+      - name: Fix container storage permissions for cache
+        if: github.event_name != 'pull_request' && (github.event_name != 'schedule' || steps.check.outputs.changed == 'true')
+        run: sudo chown -R $(id -u):$(id -g) /var/lib/containers/storage
+
       - name: Save buildah cache
         if: github.event_name != 'pull_request' && (github.event_name != 'schedule' || steps.check.outputs.changed == 'true')
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: /var/lib/containers/storage
           key: buildah-varos-${{ env.FEDORA_VERSION }}-${{ github.run_id }}
