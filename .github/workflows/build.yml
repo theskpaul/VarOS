@@ -45,12 +45,49 @@ jobs:
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
 
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
       - name: Maximize build space
         uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6 # v9
 
+      # GitHub-hosted ubuntu-24.04 runners have a second disk mounted at /mnt.
+      # We check for it first — if it is absent the storage action is skipped
+      # and buildah falls back to the root disk (smaller but still works).
+      - name: Check if /mnt is available
+        id: check_mnt
+        run: |
+          if sudo mountpoint /mnt; then
+            echo "mnt_is_there=1" >> $GITHUB_OUTPUT
+          else
+            echo "mnt_is_there=0" >> $GITHUB_OUTPUT
+          fi
+
+      # Mounts a fresh BTRFS volume from /mnt at /var/lib/containers so
+      # buildah/podman get a large, fast workspace for the duration of the job.
+      # Mirrors the approach used in bazzite's own build workflow.
+      - name: Mount BTRFS for container storage
+        if: steps.check_mnt.outputs.mnt_is_there == '1'
+        uses: ublue-os/container-storage-action@main
+        with:
+          target-dir: /var/lib/containers
+
+      # Restore the buildah layer cache into /var/lib/containers/storage
+      # (which now lives on the BTRFS mount above).
+      # On a cache hit bazzite:stable's layers are already present, so the
+      # subsequent build only pulls layers that actually changed — avoiding
+      # the multi-GB re-download on every push.
+      - name: Restore buildah cache
+        if: github.event_name != 'schedule' || steps.check.outputs.changed == 'true'
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: /var/lib/containers/storage
+          key: buildah-varos-${{ env.FEDORA_VERSION }}-${{ github.run_id }}
+          restore-keys: |
+            buildah-varos-${{ env.FEDORA_VERSION }}-
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # Persists a single SHA256 string between scheduled runs.
+      # If bazzite:stable hasn't changed the entire pipeline is skipped.
       - name: Restore base-digest cache
         if: github.event_name == 'schedule'
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
@@ -75,15 +112,6 @@ jobs:
         with:
           path: .base-digest
           key: base-digest-${{ env.FEDORA_VERSION }}
-
-      - name: Restore buildah cache
-        if: github.event_name != 'schedule' || steps.check.outputs.changed == 'true'
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: /var/lib/containers/storage
-          key: buildah-varos-${{ env.FEDORA_VERSION }}-${{ github.run_id }}
-          restore-keys: |
-            buildah-varos-${{ env.FEDORA_VERSION }}-
 
       - name: Get current date
         id: date
@@ -194,13 +222,14 @@ jobs:
             docker://${IMAGE_REF}:${{ env.DEFAULT_TAG }})
           echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
 
-      # fix: all sudo buildah/podman operations above write files as root into
-      # /var/lib/containers/storage. actions/cache/save runs as the unprivileged
-      # runner user and gets EACCES when it tries to lstat those root-owned files.
-      # Chown the directory back to the runner before the cache step runs.
+      # All buildah/podman operations above run as root, so /var/lib/containers
+      # (including the BTRFS mount root itself) is owned by root. We must chown
+      # the full /var/lib/containers — not just the storage/ subdir — because
+      # Node.js resolves the path top-down and needs execute permission on every
+      # parent directory to reach storage/.
       - name: Fix container storage permissions for cache
         if: github.event_name != 'pull_request' && (github.event_name != 'schedule' || steps.check.outputs.changed == 'true')
-        run: sudo chown -R $(id -u):$(id -g) /var/lib/containers/storage
+        run: sudo chown -R $(id -u):$(id -g) /var/lib/containers
 
       - name: Save buildah cache
         if: github.event_name != 'pull_request' && (github.event_name != 'schedule' || steps.check.outputs.changed == 'true')
