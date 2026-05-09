@@ -94,7 +94,9 @@ jobs:
           # Build type
           types: ${{ env.DISK_TYPE }}
 
-          additional-args: --use-librepo=True
+          additional-args: >-
+            --use-librepo=True
+            --rootfs xfs
 
       # ---------------------------------------------------
       # STEP 6 — Upload built ISO
