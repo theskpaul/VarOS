@@ -165,12 +165,9 @@ jobs:
           sudo buildah umount $container
           sudo buildah commit --identity-label=false --rm $container raw-img
 
-          sudo mkdir -p /tmp/rechunker
-          sudo chmod 777 /tmp/rechunker
-
           sudo podman run --rm --privileged \
             --tmpfs /tmp:size=8G \
-            --env TMPDIR=/tmp/rechunker \
+            --env TMPDIR=/tmp \
             --volume /var/lib/containers:/var/lib/containers \
             localhost/raw-img \
             rpm-ostree compose build-chunked-oci \
