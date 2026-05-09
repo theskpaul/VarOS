@@ -51,7 +51,7 @@ jobs:
       ##########################################################
 
       - name: Maximize build space
-        uses: jlumbroso/free-disk-space@v1
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
         with:
           large-packages: false
           docker-images: false
