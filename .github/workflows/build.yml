@@ -127,7 +127,6 @@ jobs:
         run: |
           sudo -E buildah build \
             --layers \
-            --target varos \
             --secret id=GITHUB_TOKEN,env=GITHUB_TOKEN \
             --tag raw-img .
 
