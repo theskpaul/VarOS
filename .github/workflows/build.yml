@@ -15,13 +15,15 @@ on:
   workflow_dispatch:
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # fix: added; suppresses Node 16 deprecation warnings
+
   IMAGE_DESC: "My Customized Bazzite Image called VarOS"
   IMAGE_KEYWORDS: "bootc,ublue,universal-blue"
   IMAGE_LOGO_URL: "https://avatars.githubusercontent.com/u/120078124?s=200&v=4"
   IMAGE_NAME: "${{ github.event.repository.name }}"
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
-  CENTOS_VERSION: "44"
+  FEDORA_VERSION: "44"  # fix: was CENTOS_VERSION — this is a Fedora/Bazzite image, not CentOS
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -44,10 +46,20 @@ jobs:
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
 
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@v4  # fix: was labelled # v6 which does not exist
 
       - name: Maximize build space
-        uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6
+        uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6 # v9
+
+      # fix: cache the .base-digest file so it persists between scheduled runs.
+      # Without this, CACHED is always "none" and the skip-if-unchanged logic
+      # never fires — every scheduled run rebuilds unconditionally.
+      - name: Restore base-digest cache
+        if: github.event_name == 'schedule'
+        uses: actions/cache/restore@v4
+        with:
+          path: .base-digest
+          key: base-digest-${{ env.FEDORA_VERSION }}
 
       # On scheduled runs, skip the entire pipeline if bazzite:stable hasn't
       # changed since the last build. This prevents pushing a new image with
@@ -64,16 +76,24 @@ jobs:
             >> $GITHUB_OUTPUT
           echo "$DIGEST" > .base-digest
 
+      # Persist the updated digest so the next scheduled run can compare against it.
+      - name: Save base-digest cache
+        if: github.event_name == 'schedule' && steps.check.outputs.changed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .base-digest
+          key: base-digest-${{ env.FEDORA_VERSION }}
+
       # Restore buildah layer cache from previous runs.
       # On cache hit, buildah skips re-downloading unchanged layers.
       - name: Restore buildah cache
         if: github.event_name != 'schedule' || steps.check.outputs.changed == 'true'
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        uses: actions/cache/restore@v4
         with:
           path: /var/lib/containers/storage
-          key: buildah-varos-${{ env.CENTOS_VERSION }}-${{ github.run_id }}
+          key: buildah-varos-${{ env.FEDORA_VERSION }}-${{ github.run_id }}
           restore-keys: |
-            buildah-varos-${{ env.CENTOS_VERSION }}-
+            buildah-varos-${{ env.FEDORA_VERSION }}-
 
       - name: Get current date
         id: date
@@ -186,10 +206,10 @@ jobs:
 
       - name: Save buildah cache
         if: github.event_name != 'pull_request' && (github.event_name != 'schedule' || steps.check.outputs.changed == 'true')
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        uses: actions/cache/save@v4
         with:
           path: /var/lib/containers/storage
-          key: buildah-varos-${{ env.CENTOS_VERSION }}-${{ github.run_id }}
+          key: buildah-varos-${{ env.FEDORA_VERSION }}-${{ github.run_id }}
 
       - name: Install Cosign
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (github.event_name != 'schedule' || steps.check.outputs.changed == 'true')
