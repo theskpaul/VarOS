@@ -165,6 +165,10 @@ jobs:
           sudo buildah umount $container
           sudo buildah commit --identity-label=false --rm $container raw-img
 
+          # Allow OSTree to write when runner disk is nearly full
+          sudo ostree config --repo /var/lib/containers/storage/ostree/repo \
+            set core.min-free-space-percent 0 2>/dev/null || true
+
           sudo podman run --rm --privileged \
             --tmpfs /tmp:size=8G \
             --tmpfs /var/tmp \
