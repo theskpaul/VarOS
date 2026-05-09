@@ -1,11 +1,11 @@
 ---
-name: Build disk images
+name: Build VarOS disk images
 
 on:
   workflow_dispatch:
     inputs:
       upload-to-s3:
-        description: "Upload to S3"
+        description: 'Upload to S3'
         required: false
         default: false
         type: boolean
@@ -14,7 +14,6 @@ on:
         type: choice
         options:
           - amd64
-          - arm64
   pull_request:
     branches:
       - main
@@ -24,10 +23,12 @@ on:
       - './.github/workflows/build-disk.yml'
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # fix: added, matches build.yml
+
   IMAGE_NAME: ${{ github.event.repository.name }} # output of build.yml, keep in sync
-  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"  # do not edit
-  DEFAULT_TAG: "latest"
-  BIB_IMAGE: "ghcr.io/lorbuschris/bootc-image-builder:20250608" # "quay.io/centos-bootc/bootc-image-builder:latest" - see https://github.com/osbuild/bootc-image-builder/pull/954
+  IMAGE_REGISTRY: 'ghcr.io/${{ github.repository_owner }}' # do not edit
+  DEFAULT_TAG: 'latest'
+  BIB_IMAGE: 'ghcr.io/lorbuschris/bootc-image-builder:20250608' # "quay.io/centos-bootc/bootc-image-builder:latest" - see https://github.com/osbuild/bootc-image-builder/pull/954
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -36,11 +37,12 @@ concurrency:
 jobs:
   build:
     name: Build disk images
-    runs-on: ${{ inputs.platform == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    # fix: flipped condition so unset inputs.platform (pull_request) defaults to amd64
+    runs-on: ${{ (inputs.platform == 'arm64') && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     strategy:
       fail-fast: false
       matrix:
-        disk-type: ["qcow2", "anaconda-iso"]
+        disk-type: ['qcow2', 'anaconda-iso']
     permissions:
       contents: read
       packages: read
@@ -75,7 +77,7 @@ jobs:
           remove-codeql: true
 
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@v4 # fix: was incorrectly labelled v6 (does not exist)
 
       - name: Build disk images
         id: build
@@ -90,14 +92,14 @@ jobs:
 
       - name: Upload disk images and Checksum to Job Artifacts
         if: inputs.upload-to-s3 != true && github.event_name != 'pull_request'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@v4 # fix: was incorrectly labelled v7.0.1 (does not exist)
         with:
           path: ${{ steps.build.outputs.output-directory }}
           if-no-files-found: error
-          retention-days: 0
+          retention-days: 1 # fix: was 0, minimum valid value is 1
           compression-level: 0
           overwrite: true
-      
+
       - name: Upload to S3
         if: inputs.upload-to-s3 == true && github.event_name != 'pull_request'
         shell: bash
