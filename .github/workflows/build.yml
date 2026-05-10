@@ -67,21 +67,6 @@ jobs:
           target-dir: /var/lib/containers
 
       ##########################################################
-      # Restore caches
-      ##########################################################
-
-      - name: Restore buildah cache
-        id: cache-buildah
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            /var/tmp/buildah-cache-*
-          key: |
-            ${{ runner.os }}-${{ runner.arch }}-buildah-${{ hashFiles('Containerfile', 'build_files/**', 'system_files/**') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-buildah-
-
-      ##########################################################
       # Login GHCR
       ##########################################################
 
@@ -126,7 +111,7 @@ jobs:
         run: |
           sudo -E buildah build \
             --layers \
-            --cache-from ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            --cache-from ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }} \
             --secret id=GITHUB_TOKEN,env=GITHUB_TOKEN \
             --tag raw-img .
 
@@ -193,25 +178,3 @@ jobs:
           sudo skopeo copy \
             ${{ steps.rechunk.outputs.ref }} \
             docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
-
-      ##########################################################
-      # Fix permissions before cache save
-      ##########################################################
-
-      - name: Fix container storage permissions
-        run: |
-          sudo chmod -R a+rwx /var/tmp/buildah-cache-* || true
-          sudo chown -R $USER:$USER /var/tmp/buildah-cache-* || true
-
-      ##########################################################
-      # Save cache
-      ##########################################################
-
-      - name: Save buildah cache
-        uses: actions/cache/save@v4
-        if: github.ref == 'refs/heads/main'
-        with:
-          path: |
-            /var/tmp/buildah-cache-*
-          key: |
-            ${{ runner.os }}-${{ runner.arch }}-buildah-${{ hashFiles('Containerfile', 'build_files/**', 'system_files/**') }}
