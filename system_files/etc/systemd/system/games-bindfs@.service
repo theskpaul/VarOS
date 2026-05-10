@@ -7,12 +7,10 @@ RequiresMountsFor=/var/srv/games
 Type=forking
 ExecStartPre=/bin/mkdir -p /var/home/%i/Games
 ExecStart=/usr/bin/bindfs \
-  --force-user=%i \
-  --force-group=gamer \
-  --create-for-group=gamer \
-  --chown-ignore \
-  --chgrp-ignore \
-  --chmod-ignore \
+  --map=root/%i:@root/@%i \
+  --create-for-user=root \
+  --create-for-group=root \
+  --perms=u=rwX:g=rwX:o= \
   /var/srv/games /var/home/%i/Games
 Restart=on-failure
 
