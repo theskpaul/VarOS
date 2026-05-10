@@ -126,6 +126,7 @@ jobs:
         run: |
           sudo -E buildah build \
             --layers \
+            --cache-from ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             --secret id=GITHUB_TOKEN,env=GITHUB_TOKEN \
             --tag raw-img .
 
