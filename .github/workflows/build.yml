@@ -167,7 +167,7 @@ jobs:
 
           sudo podman run --rm --privileged \
             --tmpfs /tmp:size=8G \
-            --tmpfs /var/tmp:size=100G \
+            --tmpfs /var/tmp:size=16G \
             --env TMPDIR=/tmp \
             --volume /var/lib/containers:/var/lib/containers \
             localhost/raw-img \
