@@ -202,6 +202,7 @@ jobs:
         run: |
           sudo chmod -R a+rwx /var/tmp/buildah-cache-* || true
           sudo chmod -R a+rwx /var/lib/containers/storage || true
+          sudo chown -R $USER:$USER /var/lib/containers/storage || true   # <-- add this
 
       ##########################################################
       # Save cache
