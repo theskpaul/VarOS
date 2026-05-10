@@ -50,10 +50,12 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/sys-config.sh
 
-COPY system_files /
-
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/999-cleanup.sh
+
+COPY system_files/nix /nix
+COPY system_files/usr /usr
+COPY system_files/etc /etc
 
 RUN bootc container lint
