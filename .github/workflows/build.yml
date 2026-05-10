@@ -75,7 +75,6 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            /var/lib/containers/storage
             /var/tmp/buildah-cache-*
           key: |
             ${{ runner.os }}-${{ runner.arch }}-buildah-${{ hashFiles('Containerfile', 'build_files/**', 'system_files/**') }}
@@ -201,8 +200,7 @@ jobs:
       - name: Fix container storage permissions
         run: |
           sudo chmod -R a+rwx /var/tmp/buildah-cache-* || true
-          sudo chmod -R a+rwx /var/lib/containers/storage || true
-          sudo chown -R $USER:$USER /var/lib/containers/storage || true   # <-- add this
+          sudo chown -R $USER:$USER /var/tmp/buildah-cache-* || true
 
       ##########################################################
       # Save cache
@@ -213,7 +211,6 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           path: |
-            /var/lib/containers/storage
             /var/tmp/buildah-cache-*
           key: |
             ${{ runner.os }}-${{ runner.arch }}-buildah-${{ hashFiles('Containerfile', 'build_files/**', 'system_files/**') }}
