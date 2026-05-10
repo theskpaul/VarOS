@@ -165,7 +165,8 @@ jobs:
           sudo buildah umount $container
           sudo buildah commit --identity-label=false --rm $container raw-img
 
-          # Initialize the OSTree repo first so the config exists before the container writes to it
+          # Install ostree CLI and disable free-space check
+          sudo apt-get install -y ostree
           sudo mkdir -p /var/lib/containers/storage/ostree/repo
           sudo ostree init \
             --repo=/var/lib/containers/storage/ostree/repo \
