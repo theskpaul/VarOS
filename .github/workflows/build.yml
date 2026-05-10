@@ -160,25 +160,18 @@ jobs:
           container=$(sudo buildah from raw-img)
           mnt=$(sudo buildah mount $container)
 
-          sudo bash -c "rm -rf $mnt/run/* $mnt/tmp/*"
+          sudo bash -c "rm -rf $mnt/run/.* $mnt/run/* $mnt/tmp/.* $mnt/tmp/*"
 
           sudo buildah umount $container
           sudo buildah commit --identity-label=false --rm $container raw-img
 
-          sudo podman run --rm --privileged \
-            --tmpfs /tmp:size=8G \
-            --tmpfs /var/tmp:size=10G \
-            --env TMPDIR=/tmp \
-            --volume /var/lib/containers:/var/lib/containers \
-            localhost/raw-img \
-            rpm-ostree compose build-chunked-oci \
-              --bootc \
-              --max-layers 127 \
-              --format-version 2 \
-              --from localhost/raw-img \
-              --output containers-storage:localhost/chunked-img
-
+          sudo podman run --rm --privileged --volume /var/lib/containers:/var/lib/containers \
+              localhost/raw-img \
+              rpm-ostree compose build-chunked-oci \
+              --bootc --max-layers 127 --format-version 2 \
+              --from localhost/raw-img --output containers-storage:localhost/chunked-img
           sudo podman untag raw-img
+
           echo "ref=containers-storage:localhost/chunked-img" >> "$GITHUB_OUTPUT"
 
       ##########################################################
