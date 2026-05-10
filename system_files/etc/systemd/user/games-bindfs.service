@@ -7,8 +7,6 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/bin/bindfs \
     --uid=%U \
-    --create-for-user=root \
-    --create-for-group=gamer \
     --chown-ignore \
     /var/srv/games \
     %h/Games
