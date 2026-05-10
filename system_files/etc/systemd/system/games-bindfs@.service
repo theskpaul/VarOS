@@ -1,0 +1,18 @@
+[Unit]
+Description=Bind-mount shared games subvol for %i
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/bindfs \
+    --uid=%i \
+    --create-for-user=root \
+    --create-for-group=gamer \
+    --chown-ignore \
+    /var/srv/games \
+    /var/home/%i/Games
+ExecStop=/usr/bin/fusermount -u /var/home/%i/Games
+
+[Install]
+WantedBy=multi-user.target
