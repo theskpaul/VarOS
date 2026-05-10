@@ -165,19 +165,9 @@ jobs:
           sudo buildah umount $container
           sudo buildah commit --identity-label=false --rm $container raw-img
 
-          # Install ostree CLI and disable free-space check
-          sudo apt-get install -y ostree
-          sudo mkdir -p /var/lib/containers/storage/ostree/repo
-          sudo ostree init \
-            --repo=/var/lib/containers/storage/ostree/repo \
-            --mode=bare-user-only
-          sudo ostree config \
-            --repo=/var/lib/containers/storage/ostree/repo \
-            set core.min-free-space-percent 0
-
           sudo podman run --rm --privileged \
             --tmpfs /tmp:size=8G \
-            --tmpfs /var/tmp \
+            --tmpfs /var/tmp:size=8G \
             --env TMPDIR=/tmp \
             --volume /var/lib/containers:/var/lib/containers \
             localhost/raw-img \
