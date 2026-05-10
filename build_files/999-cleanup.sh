@@ -20,8 +20,11 @@ rm -rf /nix/*
 
 # Cleanup the entirety of `/var`.
 # None of these get in the end-user system and bootc lints get super mad if anything is in there
+# Cleanup the entirety of `/var`.
 rm -rf /var
 mkdir -p /var
+mkdir -p /var/tmp
+chmod 1777 /var/tmp
 
 # Commit and lint container
 bootc container lint || true
