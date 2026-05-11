@@ -146,6 +146,25 @@ jobs:
               --username "${{ github.actor }}" \
               --password-stdin
 
+      # Pull the VarOS image explicitly with retries before handing off to BIB.
+      # BIB no longer pulls images itself — it requires the image to already be
+      # in local container storage. We also retry up to 3 times to survive
+      # transient GHCR 502 errors like the one that caused this failure.
+      - name: Capture runner UID and GID
+        run: |
+          echo "USER_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "USER_GID=$(id -g)" >> "$GITHUB_ENV"
+
+      - name: Pull VarOS image
+        run: |
+          for i in 1 2 3; do
+            echo "Pull attempt $i..."
+            sudo podman pull \
+              ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }} && break
+            echo "Attempt $i failed. Waiting 20s before retry..."
+            sleep 20
+          done
+
       # ────────────────────────────────────────────────────────────────────────
       # 6. BUILD THE ISO WITH BOOTC-IMAGE-BUILDER
       # BIB is the official tool from the osbuild project for converting a
