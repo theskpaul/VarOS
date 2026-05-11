@@ -1,0 +1,180 @@
+name: VarOS Container Image
+
+on:
+  push:
+    branches:
+      - main
+
+    paths-ignore:
+      - '**.md'
+      - '**.txt'
+      - 'docs/**'
+
+  pull_request:
+
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: varos
+  IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+  BASE_IMAGE: ghcr.io/ublue-os/bazzite:stable
+  FEDORA_VERSION: 44
+
+jobs:
+  build:
+    name: Build and push image
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      ##########################################################
+      # Checkout
+      ##########################################################
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      ##########################################################
+      # Free disk space
+      ##########################################################
+
+      - name: Maximize build space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        with:
+          large-packages: false
+          docker-images: false
+
+      ##########################################################
+      # BTRFS container storage
+      ##########################################################
+
+      - name: Mount BTRFS for container storage
+        uses: ublue-os/container-storage-action@main
+        continue-on-error: true
+        with:
+          target-dir: /var/lib/containers
+
+      ##########################################################
+      # Login GHCR
+      ##########################################################
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            sudo podman login ghcr.io \
+            -u "${{ github.actor }}" \
+            --password-stdin
+
+      ##########################################################
+      # Pull previous image for cache reuse
+      ##########################################################
+
+      - name: Pull previous image
+        continue-on-error: true
+        run: |
+          sudo podman pull \
+            ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      ##########################################################
+      # Metadata
+      ##########################################################
+
+      - name: Generate metadata
+        id: meta
+        run: |
+          DATE=$(date +%Y%m%d)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+
+          VERSION="${DATE}-${SHORT_SHA}"
+
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      ##########################################################
+      # Build image
+      ##########################################################
+
+      - name: Build Image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sudo -E buildah build \
+            --layers \
+            --cache-from ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --secret id=GITHUB_TOKEN,env=GITHUB_TOKEN \
+            --tag raw-img .
+
+      ##########################################################
+      # Clean temp runtime dirs
+      ##########################################################
+
+      - name: Clean runtime directories
+        run: |
+          container=$(sudo buildah from raw-img)
+          mnt=$(sudo buildah mount $container)
+
+          sudo find "$mnt/run" -mindepth 1 -delete || true
+          sudo find "$mnt/tmp" -mindepth 1 -delete || true
+
+          sudo buildah umount $container
+
+          sudo buildah commit \
+            --identity-label=false \
+            --rm \
+            $container \
+            raw-img
+
+      ##########################################################
+      # Rechunk OCI image
+      ##########################################################
+
+      - name: Run Rechunker
+        id: rechunk
+        run: |
+          container=$(sudo buildah from raw-img)
+          mnt=$(sudo buildah mount $container)
+
+          sudo bash -c "rm -rf $mnt/run/.* $mnt/run/* $mnt/tmp/.* $mnt/tmp/*"
+
+          sudo buildah umount $container
+          sudo buildah commit --identity-label=false --rm $container raw-img
+
+          sudo podman run --rm --privileged --volume /var/lib/containers:/var/lib/containers \
+              localhost/raw-img \
+              rpm-ostree compose build-chunked-oci \
+              --bootc --max-layers 64 --format-version 2 \
+              --from localhost/raw-img --output containers-storage:localhost/chunked-img
+          sudo podman untag raw-img
+
+          echo "ref=containers-storage:localhost/chunked-img" >> "$GITHUB_OUTPUT"
+
+      ##########################################################
+      # Push latest
+      ##########################################################
+
+      - name: Push latest image
+        run: |
+          sudo skopeo copy \
+            ${{ steps.rechunk.outputs.ref }} \
+            docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      ##########################################################
+      # Push versioned image
+      ##########################################################
+
+      - name: Push versioned image
+        run: |
+          sudo skopeo copy \
+            ${{ steps.rechunk.outputs.ref }} \
+            docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
