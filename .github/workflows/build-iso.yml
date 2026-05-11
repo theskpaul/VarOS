@@ -172,7 +172,10 @@ jobs:
           image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           config-file: ./disk_config/iso.toml
           types: anaconda-iso
-          additional-args: --use-librepo=True
+          chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
+          # --rootfs=btrfs matches what your Justfile and disk.toml already declare.
+          # Without it, BIB cannot infer the filesystem type from the container and aborts.
+          additional-args: --use-librepo=True --rootfs=btrfs
 
       # ────────────────────────────────────────────────────────────────────────
       # 7. COLLECT ARTIFACTS AND GENERATE CHECKSUM
