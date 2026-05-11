@@ -154,7 +154,6 @@ jobs:
               localhost/raw-img \
               rpm-ostree compose build-chunked-oci \
               --bootc --max-layers 127 --format-version 2 \
-              --previous-build-ref docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
               --from localhost/raw-img --output containers-storage:localhost/chunked-img
           sudo podman untag raw-img
 
