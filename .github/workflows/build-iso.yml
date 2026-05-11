@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       upload-to-s3:
-        description: "Upload finished ISO to S3 instead of GitHub Artifacts"
+        description: 'Upload finished ISO to S3 instead of GitHub Artifacts'
         required: false
         default: false
         type: boolean
@@ -28,30 +28,25 @@ on:
     branches:
       - main
     paths:
-      - "disk_config/iso.toml"
-      - ".github/workflows/build-iso.yml"
+      - 'disk_config/iso.toml'
+      - '.github/workflows/build-iso.yml'
 
   pull_request:
     branches:
       - main
     paths:
-      - "disk_config/iso.toml"
-      - ".github/workflows/build-iso.yml"
+      - 'disk_config/iso.toml'
+      - '.github/workflows/build-iso.yml'
 
 # Suppress Node 16 deprecation warnings from older third-party actions.
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
-  # IMAGE_NAME comes from the repository name, lowercased below.
-  # Keep this in sync with the IMAGE_NAME used in build.yml.
   IMAGE_NAME: ${{ github.event.repository.name }}
-  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
-  DEFAULT_TAG: "latest"
-
-  # Pin BIB to a specific digest so the build is reproducible.
-  # Update this when you want a newer version of bootc-image-builder.
-  # See: https://github.com/osbuild/bootc-image-builder
-  BIB_IMAGE: "ghcr.io/lorbuschris/bootc-image-builder:20250608"
+  IMAGE_REGISTRY: 'ghcr.io/${{ github.repository_owner }}'
+  DEFAULT_TAG: 'latest'
+  # Using the official Quay image. The lorbuschris mirror tag 20250608
+  # does not exist — switching back to the upstream source.
+  BIB_IMAGE: 'quay.io/centos-bootc/bootc-image-builder:latest'
 
 # Cancel any in-progress run for the same branch/PR when a new one is pushed.
 # This saves runner minutes and avoids uploading stale artifacts.
@@ -65,9 +60,9 @@ jobs:
     runs-on: ubuntu-24.04
 
     permissions:
-      contents: read   # checkout
-      packages: read   # pull the published container image from GHCR
-      id-token: write  # needed if you later add Cosign signing
+      contents: read # checkout
+      packages: read # pull the published container image from GHCR
+      id-token: write # needed if you later add Cosign signing
 
     steps:
       # ────────────────────────────────────────────────────────────────────────
@@ -239,11 +234,11 @@ jobs:
         shell: bash
         env:
           RCLONE_CONFIG_S3_TYPE: s3
-          RCLONE_CONFIG_S3_PROVIDER:          ${{ secrets.S3_PROVIDER }}
-          RCLONE_CONFIG_S3_ACCESS_KEY_ID:     ${{ secrets.S3_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_S3_PROVIDER: ${{ secrets.S3_PROVIDER }}
+          RCLONE_CONFIG_S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
           RCLONE_CONFIG_S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          RCLONE_CONFIG_S3_REGION:            ${{ secrets.S3_REGION }}
-          RCLONE_CONFIG_S3_ENDPOINT:          ${{ secrets.S3_ENDPOINT }}
+          RCLONE_CONFIG_S3_REGION: ${{ secrets.S3_REGION }}
+          RCLONE_CONFIG_S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
           SOURCE_DIR: ${{ steps.prep.outputs.upload_dir }}
         run: |
           sudo apt-get update -qq
