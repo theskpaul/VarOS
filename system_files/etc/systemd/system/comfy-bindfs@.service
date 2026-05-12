@@ -1,0 +1,18 @@
+[Unit]
+Description=Bind-mount shared comfyui subvol for %i
+After=local-fs.target
+RequiresMountsFor=/var/srv/comfyui
+
+[Service]
+Type=forking
+ExecStartPre=/bin/mkdir -p /var/home/%i/Comfy/ComfyUI
+ExecStart=/usr/bin/bindfs \
+  --map=root/%i:@root/@%i \
+  --create-for-user=root \
+  --create-for-group=root \
+  --perms=u=rwX:g=rwX:o= \
+  /var/srv/comfyui /var/home/%i/Comfy/ComfyUI
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
