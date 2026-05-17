@@ -23,7 +23,7 @@
 
 ## What is VarOS?
 
-VarOS is a custom [bootc](https://containers.github.io/bootc/) image layered on top of [Bazzite](https://bazzite.gg/), tuned for a daily driver development and gaming workstation. It ships with a curated set of tools, hardened defaults, and zero bloat — built and signed automatically via GitHub Actions every day.
+VarOS is a custom [bootc](https://containers.github.io/bootc/) image layered on top of [Bazzite](https://bazzite.gg/), tuned for a daily driver development and gaming workstation. It ships with a curated set of tools, hardened defaults, and zero bloat — built and signed automatically via GitHub Actions on every push to main.
 
 It is **not** a distro. It is a *declaration* — a reproducible, image-based OS that updates atomically and rolls back cleanly if anything breaks.
 
@@ -38,25 +38,31 @@ It is **not** a distro. It is a *declaration* — a reproducible, image-based OS
 | Fedora version | 44 |
 | Update model | Atomic / bootc |
 | Init system | systemd |
+| Display manager | SDDM (replaces `plasma-login-manager`) |
 
 ### 📦 Packages
 
 **System**
 - `nix` + `nix-daemon` — reproducible dev environments without touching the base system
 - `irqbalance`, `uresourced` — interrupt and resource scheduling optimizations
+- `nicstat`, `numactl` — network and NUMA statistics
 - `waypipe` — remote Wayland app forwarding
 - `gparted`, `igt-gpu-tools` — disk and GPU diagnostics
 - `usbmuxd` — iOS device support
 - `clamav` + `clamtk` — antivirus
+- `bindfs` — userspace bind mounts (used for shared game/ComfyUI storage)
+- `sddm`, `sddm-kcm`, `sddm-breeze` — display manager
 
 **Development**
 - `neovim`, `zsh`, `alacritty` — terminal stack
+- `ptyxis` — GNOME terminal emulator
 - `btop` — system monitor
 - `gh` — GitHub CLI
 - `android-tools` — ADB/fastboot
 - `bcc`, `bpftrace`, `bpftop` — eBPF tracing and profiling
 - `sysprof`, `tiptop` — system and CPU profiling
 - `ccache` — compiler cache
+- `git-subtree` — git subtree tooling
 - `podman-tui`, `podman-machine` — container management
 - `flatpak-builder` — build Flatpak apps
 - `restic`, `rclone` — backup and cloud sync
@@ -97,46 +103,93 @@ Uses `wpa_supplicant` backend instead of `iwd` for broader hardware compatibilit
 `ter-122b` font with `in-eng` keymap.
 
 ### 🗂️ Nix
-Nix store lives at `/var/nix`, bind-mounted to `/nix` at boot. The `nix-daemon` and `nix.mount` unit start automatically.
+Nix store lives at `/var/nix`, bind-mounted to `/nix` at boot via `nix.mount`. The unit starts automatically on `local-fs.target`.
+
+### 🎮 Shared Game Storage
+Games are stored on a separate btrfs subvolume at `/var/srv/games` and exposed per-user at `~/Games` via `bindfs`. The `games-bindfs@.service` template mounts the shared subvolume for each user with ownership remapped so Steam, Proton, and pressure-vessel all behave correctly.
+
+```bash
+systemctl enable --now games-bindfs@<username>.service
+```
+
+Point Steam's library at `~/Games` rather than the subvolume directly.
+
+### 🤖 Shared ComfyUI Storage
+The same pattern applies to ComfyUI via `comfy-bindfs@.service`, mounting `/var/srv/comfyui` at `~/Comfy/ComfyUI` per user.
+
+```bash
+systemctl enable --now comfy-bindfs@<username>.service
+```
+
+### 📷 Webcam
+`uvcvideo` is blacklisted by default. To re-enable it temporarily:
+
+```bash
+sudo modprobe uvcvideo
+```
+
+Or remove `/etc/modprobe.d/blacklist.conf` from a layered override to make it permanent.
+
+### 🖊️ Default Editor
+`$EDITOR` is set to `/usr/bin/vim` system-wide via `/etc/environment`.
 
 ---
 
 ## Build & CI
 
-Images are built daily via GitHub Actions, rechunked with `rpm-ostree compose build-chunked-oci` for efficient OTA updates, and signed with [Cosign](https://sigstore.dev/).
+Images are built via GitHub Actions on every push to `main`, rechunked with `rpm-ostree compose build-chunked-oci` for efficient OTA updates, signed with [Cosign](https://sigstore.dev/) v2.6.3, and pushed to GHCR.
 
-- **Pull requests** — build only, no rechunk, no push
-- **Push to main** — full build, rechunk, push to GHCR, sign
-- **Scheduled (daily)** — skips the entire pipeline if the upstream `bazzite:stable` digest hasn't changed
+- **Pull requests** — build only, no rechunk, no push, no signing
+- **Push to main** — full build, rechunk, push to GHCR (`:latest` + versioned tag), sign both tags
+- **`workflow_dispatch`** — manual trigger, same as push to main
+- **Paths ignored** — changes to `**.md`, `**.txt`, and `docs/**` do not trigger a build
+
+Dependency updates are managed automatically — GitHub Actions pins are updated weekly via [Dependabot](https://docs.github.com/en/code-security/dependabot), and broader dependency updates are handled by [Renovate](https://docs.renovatebot.com/) with automerge enabled for digest pins.
+
+### Repository layout
 
 ```
 Containerfile
-└── build_files/
-    ├── build.sh                         ← single entrypoint
-    ├── sys-config.sh                    ← systemd unit enables
-    └── package_groups/
-        ├── 10-system-packages.sh
-        ├── 20-dev-packages.sh
-        ├── 30-docker-packages.sh
-        ├── 40-vscode.sh
-        ├── 50-zed.sh
-        └── 60-additional-packages.sh
+├── build_files/
+│   ├── sys-config.sh                    ← systemd unit enables
+│   ├── 999-cleanup.sh                   ← final cache/tmp purge + bootc lint
+│   └── package_groups/
+│       ├── 10-system-packages.sh
+│       ├── 20-dev-packages.sh
+│       ├── 30-docker-packages.sh
+│       ├── 40-vscode.sh
+│       ├── 50-zed.sh
+│       └── 60-additional-packages.sh
+└── system_files/
+    ├── etc/                             ← dropped into /etc at image build time
+    └── usr/                             ← dropped into /usr at image build time
 ```
 
 ### Build locally
 
 ```bash
-# Build the image
+# Build the container image
 just build
 
-# Build a QCOW2 VM image
+# Build a QCOW2 / RAW / ISO VM image
 just build-qcow2
+just build-raw
+just build-iso
 
-# Run the VM
+# Rebuild (container + VM image in one step)
+just rebuild-qcow2
+
+# Run a QCOW2 VM (opens browser UI on an available port)
 just run-vm
 
-# Lint all shell scripts
+# Run via systemd-vmspawn
+just spawn-vm
+
+# Lint all shell scripts with shellcheck
 just lint
+
+# Format all shell scripts with shfmt
+just format
 ```
 
 ---
@@ -146,16 +199,18 @@ just lint
 ### Rebase from an existing ublue image
 
 ```bash
-bootc switch --transport registry ghcr.io/USERNAME/varos:latest
+bootc switch --transport registry ghcr.io/theskpaul/varos:latest
 ```
 
-### Verify the signature
+### Verify the image signature
 
 ```bash
 cosign verify \
   --key cosign.pub \
-  ghcr.io/USERNAME/varos:latest
+  ghcr.io/theskpaul/varos:latest
 ```
+
+The public key is committed to this repo as [`cosign.pub`](cosign.pub).
 
 ---
 
