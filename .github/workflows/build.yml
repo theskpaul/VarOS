@@ -188,7 +188,7 @@ jobs:
 
       - name: Sign image
         run: |
-          cosign sign --key env://SIGNING_SECRET \
+          cosign sign --yes --key env://SIGNING_SECRET \
             ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
         env:
