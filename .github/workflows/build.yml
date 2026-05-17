@@ -178,3 +178,18 @@ jobs:
           sudo skopeo copy \
             ${{ steps.rechunk.outputs.ref }} \
             docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+
+      ##########################################################
+      # Sign image
+      ##########################################################
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image
+        run: |
+          cosign sign --key env://SIGNING_SECRET \
+            ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+        env:
+          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
