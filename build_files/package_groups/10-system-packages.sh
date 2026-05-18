@@ -6,8 +6,8 @@ dnf5 install -y \
    nix \
    nix-daemon
 
-dnf5 remove -y \
-   plasma-login-manager
+# dnf5 remove -y \
+#    plasma-login-manager
 
 dnf5 --setopt=install_weak_deps=False install -y \
    bindfs \
@@ -20,10 +20,10 @@ dnf5 --setopt=install_weak_deps=False install -y \
    nicstat \
    numactl \
    usbmuxd \
-   waypipe \
-   sddm \
-   sddm-kcm \
-   sddm-breeze
+   waypipe
+   # sddm \
+   # sddm-kcm \
+   # sddm-breeze
 
 # dnf5 remove -y libva-intel-media-driver
 # intel-media-driver
