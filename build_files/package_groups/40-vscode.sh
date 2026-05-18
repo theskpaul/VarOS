@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
 set -xeuo pipefail
+IFS=$'\n\t'
+umask 022
 
 dnf5 config-manager addrepo --set=baseurl="https://packages.microsoft.com/yumrepos/vscode" --id="vscode"
 dnf5 config-manager setopt vscode.enabled=0

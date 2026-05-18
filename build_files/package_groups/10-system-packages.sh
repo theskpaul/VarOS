@@ -1,6 +1,8 @@
 #!/bin/bash
 
 set -ouex pipefail
+IFS=$'\n\t'
+umask 022
 
 dnf5 install -y \
    nix \

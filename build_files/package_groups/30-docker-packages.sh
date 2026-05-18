@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
 set -xeuo pipefail
+IFS=$'\n\t'
+umask 022
 
 docker_pkgs=(
     containerd.io
