@@ -61,7 +61,7 @@ jobs:
       ##########################################################
 
       - name: Mount BTRFS for container storage
-        uses: ublue-os/container-storage-action@main
+        uses: ublue-os/container-storage-action@dc1f4c8f17b672069e921f001132f7cf98a423a6
         continue-on-error: true
         with:
           target-dir: /var/lib/containers
