@@ -3,7 +3,7 @@
 set -xeuo pipefail
 
 dnf5 --setopt=install_weak_deps=False install -y \
-    falkon \
+    konqueror \
     ptyxis
 
 dnf5 config-manager setopt protonvpn-fedora-stable.enabled=0
