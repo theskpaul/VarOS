@@ -160,6 +160,19 @@ jobs:
           echo "ref=containers-storage:localhost/chunked-img" >> "$GITHUB_OUTPUT"
 
       ##########################################################
+      # Scan image for vulnerabilities
+      ##########################################################
+
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: localhost/chunked-img
+          format: table
+          exit-code: 1
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      ##########################################################
       # Push latest
       ##########################################################
 
