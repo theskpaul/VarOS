@@ -147,7 +147,7 @@ jobs:
             --exit-code 1 \
             --severity CRITICAL,HIGH \
             --ignore-unfixed \
-            containers-storage:localhost/raw-img
+            "containers-storage:localhost/raw-img"
 
       ##########################################################
       # Rechunk OCI image
