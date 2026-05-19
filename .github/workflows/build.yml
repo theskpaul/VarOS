@@ -141,13 +141,14 @@ jobs:
       ##########################################################
 
       - name: Scan image for vulnerabilities
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: localhost/raw-img
-          format: table
-          exit-code: 1
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
+      run: |
+        sudo buildah push raw-img containers-storage:localhost/raw-img
+        sudo podman run --rm -v /var/lib/containers:/var/lib/containers \
+          aquasec/trivy image \
+          --exit-code 1 \
+          --severity CRITICAL,HIGH \
+          --ignore-unfixed \
+          containers-storage:localhost/raw-img
 
  ##########################################################
       # Rechunk OCI image
