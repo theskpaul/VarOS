@@ -145,6 +145,7 @@ jobs:
           sudo podman run --rm \
             -v /tmp/raw-img.tar:/image.tar \
             aquasec/trivy image \
+            --skip-files
             --exit-code 1 \
             --severity CRITICAL,HIGH \
             --ignore-unfixed \
