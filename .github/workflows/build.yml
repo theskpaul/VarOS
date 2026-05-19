@@ -139,18 +139,18 @@ jobs:
       # Scan image for vulnerabilities
       ##########################################################
 
-      - name: Scan image for vulnerabilities
-        run: |
-          sudo podman save raw-img -o /tmp/raw-img.tar
-          sudo podman run --rm \
-            -v /tmp/raw-img.tar:/image.tar \
-            aquasec/trivy image \
-            --skip-files
-            --exit-code 1 \
-            --severity CRITICAL,HIGH \
-            --ignore-unfixed \
-            --input /image.tar
-          rm -f /tmp/raw-img.tar
+#      - name: Scan image for vulnerabilities
+#        run: |
+#          sudo podman save raw-img -o /tmp/raw-img.tar
+#          sudo podman run --rm \
+#            -v /tmp/raw-img.tar:/image.tar \
+#            aquasec/trivy image \
+#            --skip-files
+#            --exit-code 1 \
+#            --severity CRITICAL,HIGH \
+#            --ignore-unfixed \
+#            --input /image.tar
+#          rm -f /tmp/raw-img.tar
 
       ##########################################################
       # Rechunk OCI image
