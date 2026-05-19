@@ -135,22 +135,21 @@ jobs:
             $container \
             raw-img
 
-     
-##########################################################
+      ##########################################################
       # Scan image for vulnerabilities
       ##########################################################
 
       - name: Scan image for vulnerabilities
-      run: |
-        sudo buildah push raw-img containers-storage:localhost/raw-img
-        sudo podman run --rm -v /var/lib/containers:/var/lib/containers \
-          aquasec/trivy image \
-          --exit-code 1 \
-          --severity CRITICAL,HIGH \
-          --ignore-unfixed \
-          containers-storage:localhost/raw-img
+        run: |
+          sudo buildah push raw-img containers-storage:localhost/raw-img
+          sudo podman run --rm -v /var/lib/containers:/var/lib/containers \
+            aquasec/trivy image \
+            --exit-code 1 \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
+            containers-storage:localhost/raw-img
 
- ##########################################################
+      ##########################################################
       # Rechunk OCI image
       ##########################################################
 
