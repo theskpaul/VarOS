@@ -30,4 +30,4 @@ dnf5 --setopt=install_weak_deps=False install -y \
 dnf copr enable -y bieszczaders/kernel-cachyos-addons
 dnf install ananicy-cpp -y
 
-# dnf5 config-manager setopt kernel-cachyos-addons.enabled=0
+dnf5 config-manager setopt copr:copr.fedorainfracloud.org:bieszczaders:kernel-cachyos-addons.enabled=0
