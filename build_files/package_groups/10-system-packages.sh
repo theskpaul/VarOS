@@ -27,7 +27,7 @@ dnf5 --setopt=install_weak_deps=False install -y \
    # sddm-kcm \
    # sddm-breeze
 
-dnf copr enable bieszczaders/kernel-cachyos-addons
+dnf copr enable -y bieszczaders/kernel-cachyos-addons
 dnf install ananicy-cpp -y
 
 dnf5 config-manager setopt kernel-cachyos-addons.enabled=0
