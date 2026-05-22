@@ -27,7 +27,7 @@ dnf5 --setopt=install_weak_deps=False install -y \
    # sddm-kcm \
    # sddm-breeze
 
-# dnf5 remove -y libva-intel-media-driver
-# intel-media-driver
+dnf copr enable bieszczaders/kernel-cachyos-addons
+dnf install ananicy-cpp -y
 
-# dnf5 config-manager setopt rpmfusion-nonfree.enabled=0
+dnf5 config-manager setopt kernel-cachyos-addons.enabled=0

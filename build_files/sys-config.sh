@@ -11,4 +11,6 @@ systemctl enable nix.mount
 systemctl enable podman.socket
 systemctl enable docker.socket
 systemctl enable me.proton.vpn.split_tunneling.service
+systemctl enable ananicy-cpp
+
 # systemctl enable sddm.service
