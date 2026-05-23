@@ -1,6 +1,7 @@
 [Unit]
-Description=Bind-mount for storing a limited amount of data temporarily for %i
-After=systemd-tmpfiles-setup.service
+Description=Bind-mount shared tmp for %i
+After=shared-tmp.mount
+RequiresMountsFor=/var/srv/shared_tmp
 
 [Service]
 Type=forking
@@ -16,7 +17,7 @@ ExecStart=/usr/bin/bindfs \
   --create-for-user=root \
   --create-for-group=root \
   --perms=u=rw:g=rw:o= \
-  /tmp/shared_dir /var/home/%i/Temp
+  /var/srv/shared_tmp /var/home/%i/Temp
 Restart=on-failure
 
 [Install]
