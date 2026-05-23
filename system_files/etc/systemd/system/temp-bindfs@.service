@@ -5,13 +5,13 @@ RequiresMountsFor=/var/srv/shared_tmp
 
 [Service]
 Type=forking
-ExecCondition=/usr/bin/sh -c \
+ExecCondition=/bin/sh -c \
     'home="$(getent passwd %i | cut -d: -f6)"; \
         [ -n "$home" ] && [ -d "$home" ] || { \
         echo "Failed to bind temp due to user: %i doesn't exist" >&2; \
         exit 1; \
     }'
-ExecStartPre=[ -d "/var/home/%i/Temp" ]||/bin/mkdir -p /var/home/%i/Temp
+ExecStartPre=/bin/sh -c '[ -d "/var/home/%i/Temp" ] || /bin/mkdir -p /var/home/%i/Temp'
 ExecStart=/usr/bin/bindfs \
   --map=root/%i:@root/@%i \
   --create-for-user=root \
