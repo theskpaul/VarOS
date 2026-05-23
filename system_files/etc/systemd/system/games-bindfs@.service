@@ -5,7 +5,7 @@ RequiresMountsFor=/var/srv/games
 
 [Service]
 Type=forking
-ExecStartPre=[ -d "/var/home/%i/Games" ]||/bin/mkdir -p /var/home/%i/Games
+ExecStartPre=/bin/sh -c '[ -d "/var/home/%i/Games" ] || /bin/mkdir -vp /var/home/%i/Games'
 ExecStart=/usr/bin/bindfs \
   --map=root/%i:@root/@%i \
   --create-for-user=root \
