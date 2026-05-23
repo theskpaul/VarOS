@@ -5,7 +5,7 @@ RequiresMountsFor=/var/srv/comfyui
 
 [Service]
 Type=forking
-ExecStartPre=/bin/mkdir -p /var/home/%i/Comfy/ComfyUI
+ExecStartPre=[ -d "/var/home/%i/Comfy/ComfyUI" ]||/bin/mkdir -vp /var/home/%i/Comfy/ComfyUI
 ExecStart=/usr/bin/bindfs \
   --map=root/%i:@root/@%i \
   --create-for-user=root \
