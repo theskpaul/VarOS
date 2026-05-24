@@ -2,7 +2,7 @@
 Description=Sized capped shared tmpfs
 
 [Mount]
-What=tmpfs
+What=/tmp/shared_tmp
 Where=/var/srv/shared_tmp
 Type=tmpfs
 Options=size=1G,mode=1700,uid=0,gid=0,nr_inodes=5k,noexec,nodev,nosuid
