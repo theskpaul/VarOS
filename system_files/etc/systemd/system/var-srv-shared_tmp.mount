@@ -6,7 +6,7 @@ What=tmpfs
 Where=/var/srv/shared_tmp
 
 Type=tmpfs
-Options=size=1G,mode=1700,uid=0,gid=0,nr_inodes=5k,noexec,nodev,nosuid
+Options=size=1G,mode=2700,uid=0,gid=0,nr_inodes=5k,noexec,nodev,nosuid
 
 [Install]
 WantedBy=local-fs.target
