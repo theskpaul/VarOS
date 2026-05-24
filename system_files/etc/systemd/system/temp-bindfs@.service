@@ -1,6 +1,6 @@
 [Unit]
 Description=Bind-mount shared tmp for %i
-After=shared-tmp.mount
+After=var-srv-shared_tmp.mount
 RequiresMountsFor=/var/srv/shared_tmp
 
 [Service]

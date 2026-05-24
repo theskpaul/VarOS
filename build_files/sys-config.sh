@@ -6,7 +6,7 @@ umask 022
 
 # Enable Nix mount
 systemctl enable nix.mount
-systemctl enable shared-tmp.mount
+systemctl enable var-srv-shared_tmp.mount
 
 # Daemons
 systemctl enable podman.socket
