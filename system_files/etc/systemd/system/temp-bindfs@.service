@@ -11,7 +11,7 @@ ExecStart=/usr/bin/bindfs \
   --map=root/%i:@root/@%i \
   --create-for-user=root \
   --create-for-group=root \
-  --perms=u=rw:g=rw:o= \
+  --perms=u=rwX:g=rw:o= \
   /var/srv/shared_tmp /var/home/%i/Temp
 Restart=on-failure
 
