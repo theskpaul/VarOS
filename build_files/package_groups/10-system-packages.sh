@@ -8,8 +8,6 @@ dnf5 install -y \
    nix \
    nix-daemon
 
-# dnf5 remove -y \
-#    plasma-login-manager
 
 dnf5 --setopt=install_weak_deps=False install -y \
    bindfs \
@@ -23,9 +21,9 @@ dnf5 --setopt=install_weak_deps=False install -y \
    numactl \
    usbmuxd \
    waypipe
-   # sddm \
-   # sddm-kcm \
-   # sddm-breeze
+
+dnf install dnf-plugins-core
+dnf config-manager addrepo --from-repofile=https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
 
 dnf copr enable -y bieszczaders/kernel-cachyos-addons
 dnf install ananicy-cpp -y
