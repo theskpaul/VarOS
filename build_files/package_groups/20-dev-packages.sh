@@ -20,6 +20,7 @@ dnf5 --setopt=install_weak_deps=False install -y \
          podman-machine \
          podman-tui \
          python3-ramalama \
+         ptyxis \
          restic \
          rclone \
          sysprof \
