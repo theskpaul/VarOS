@@ -40,8 +40,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
     --mount=type=bind,source=/var/opt,target=/opt \
-    dnf5 --setopt=install_weak_deps=False install -y \
-    ptyxis brave-browser && \
+    dnf5 --setopt=install_weak_deps=False install -y brave-browser && \
     dnf5 config-manager setopt brave-browser.enabled=0 && \
     dnf clean all
 
