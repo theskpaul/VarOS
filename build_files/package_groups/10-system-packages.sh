@@ -22,8 +22,8 @@ dnf5 --setopt=install_weak_deps=False install -y \
    usbmuxd \
    waypipe
 
-dnf install dnf-plugins-core
-dnf config-manager addrepo --from-repofile=https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
+dnf install dnf-plugins-core -y
+dnf config-manager addrepo --from-repofile=https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo -y
 
 dnf copr enable -y bieszczaders/kernel-cachyos-addons
 dnf install ananicy-cpp -y
