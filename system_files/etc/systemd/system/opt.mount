@@ -1,0 +1,11 @@
+[Unit]
+Description=Create /opt overlay
+ConditionPathExists=/var/opt/.work
+
+[Mount]
+Where=/opt
+Type=overlay
+Options=defaults,lowerdir=/usr/opt,upperdir=/var/opt,workdir=/var/opt/.work
+
+[Install]
+WantedBy=local-fs.target
