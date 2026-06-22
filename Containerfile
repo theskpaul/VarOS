@@ -5,7 +5,7 @@ FROM ghcr.io/ublue-os/bazzite:stable
 
 COPY system_files/ /
 
-RUN unlink /opt && mkdir -vp /opt
+RUN unlink /opt && mkdir -vp /opt /usr/opt
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
@@ -51,7 +51,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
-    --mount=type=overlay,lowerdir=/usr/opt,upperdir=/var/opt,workdir=/var/opt/.work,dst=/opt \
+    --mount=type=bind,source=/usr/opt,target=/opt \
     dnf5 --setopt=install_weak_deps=False install -y brave-browser && \
     dnf5 config-manager setopt brave-browser.enabled=0 && \
     dnf clean all
